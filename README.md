@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # SwiftShop - Simple Full-Stack E-Commerce Store
 
 SwiftShop is a complete, production-ready, modular e-commerce store built with **Django 5 (Python 3.12)**, **Django ORM**, **SQLite**, and modern **Bootstrap 5 + Vanilla JavaScript**. Designed specifically for interview showcases, college vivas, and architectural demonstrations.
@@ -402,3 +403,7 @@ python manage.py test orders
 
 ### Q5: How are passwords protected?
 > **Answer**: We use Django's built-in password management (`make_password`, `check_password`, `User.set_password`), which hashes passwords with **PBKDF2 with a SHA256 digest** and cryptographic salt. No plaintext passwords ever touch the database.
+=======
+# CodeAlpha_ecomerce
+A smart e-commerce and personal shopping platform built with Python, Django, SQLite, HTML, CSS, and JavaScript.
+>>>>>>> 15c46e845ea723f82068ef56f31d146d69e8d877
