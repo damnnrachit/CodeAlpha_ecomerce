@@ -1,0 +1,200 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SwiftShop | Modern E-Commerce{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Custom Application CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <!-- Brand -->
+            <a class="navbar-brand" href="{% url 'store:product_list' %}">
+                <i class="bi bi-bag-check-fill text-primary fs-3"></i>
+                <span>SwiftShop</span>
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navbar Links & Controls -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <!-- Search Form -->
+                <form class="d-flex mx-auto my-2 my-lg-0 col-12 col-lg-5" action="{% url 'store:product_list' %}" method="get" role="search">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input class="form-control bg-light border-start-0 ps-0" type="search" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search products..." aria-label="Search products">
+                        {% if request.GET.category %}
+                            <input type="hidden" name="category" value="{{ request.GET.category }}">
+                        {% endif %}
+                        <button class="btn btn-outline-secondary" type="submit">Search</button>
+                    </div>
+                </form>
+
+                <!-- Navigation Action Links -->
+                <ul class="navbar-nav ms-auto align-items-center gap-2">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark fw-medium" href="{% url 'store:product_list' %}">
+                            <i class="bi bi-grid me-1"></i> Catalog
+                        </a>
+                    </li>
+
+                    {% if user.is_authenticated %}
+                        <!-- Cart Link -->
+                        <li class="nav-item">
+                            <a class="btn btn-light position-relative d-flex align-items-center gap-1 border" href="{% url 'cart:cart_detail' %}" aria-label="Shopping Cart">
+                                <i class="bi bi-cart3 fs-5 text-dark"></i>
+                                <span class="d-none d-md-inline fw-semibold">Cart</span>
+                                <span id="navbar-cart-count" class="cart-badge ms-1">{{ cart_item_count }}</span>
+                            </a>
+                        </li>
+
+                        <!-- User Profile Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-1 fw-medium text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle fs-5 text-primary"></i>
+                                <span>{{ user.username }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li>
+                                    <h6 class="dropdown-header">Signed in as <strong>{{ user.username }}</strong></h6>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'orders:order_history' %}">
+                                        <i class="bi bi-box-seam"></i> My Orders
+                                    </a>
+                                </li>
+                                {% if user.is_staff %}
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'admin:index' %}" target="_blank">
+                                            <i class="bi bi-shield-lock"></i> Django Admin
+                                        </a>
+                                    </li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{% url 'accounts:logout' %}" method="post" class="px-2 py-1">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-1">
+                                            <i class="bi bi-box-arrow-right"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <!-- Guest Cart Link -->
+                        <li class="nav-item">
+                            <a class="btn btn-light position-relative d-flex align-items-center gap-1 border" href="{% url 'accounts:login' %}?next={% url 'cart:cart_detail' %}" title="Log in to view cart">
+                                <i class="bi bi-cart3 fs-5 text-dark"></i>
+                                <span class="d-none d-md-inline fw-semibold">Cart</span>
+                                <span id="navbar-cart-count" class="cart-badge ms-1">0</span>
+                            </a>
+                        </li>
+
+                        <!-- Guest Auth Links -->
+                        <li class="nav-item">
+                            <a class="nav-link text-dark fw-medium" href="{% url 'accounts:login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary btn-sm" href="{% url 'accounts:register' %}">Register</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages Container -->
+    <div class="container mt-3">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show d-flex align-items-center shadow-sm" role="alert">
+                    <i class="bi me-2 {% if message.tags == 'success' %}bi-check-circle-fill{% elif message.tags == 'danger' %}bi-exclamation-triangle-fill{% elif message.tags == 'warning' %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+                    <div>{{ message }}</div>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content Block -->
+    <main class="container my-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Footer -->
+    <footer>
+        <div class="container">
+            <div class="row gy-4">
+                <div class="col-12 col-md-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-bag-check-fill text-primary fs-4"></i>
+                        <h5 class="mb-0 fw-bold text-dark">SwiftShop</h5>
+                    </div>
+                    <p class="small text-muted mb-3">
+                        A full-stack e-commerce store demo built for technical viva, interviews, and portfolio presentation.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-light text-dark border">Django 5</span>
+                        <span class="badge bg-light text-dark border">Python 3.12</span>
+                        <span class="badge bg-light text-dark border">SQLite</span>
+                        <span class="badge bg-light text-dark border">Bootstrap 5</span>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4">
+                    <h6 class="fw-bold text-dark mb-3">Quick Navigation</h6>
+                    <ul class="list-unstyled small mb-0 d-flex flex-column gap-2">
+                        <li><a href="{% url 'store:product_list' %}" class="text-decoration-none text-muted">Product Catalog</a></li>
+                        <li><a href="{% url 'cart:cart_detail' %}" class="text-decoration-none text-muted">Shopping Cart</a></li>
+                        <li><a href="{% url 'orders:order_history' %}" class="text-decoration-none text-muted">Order History</a></li>
+                        <li><a href="{% url 'admin:index' %}" class="text-decoration-none text-muted" target="_blank">Django Admin Panel</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-6 col-md-4">
+                    <h6 class="fw-bold text-dark mb-3">Viva / Interview Highlights</h6>
+                    <ul class="list-unstyled small text-muted mb-0 d-flex flex-column gap-1">
+                        <li><i class="bi bi-check2 text-success me-1"></i> Atomic Order Transactions</li>
+                        <li><i class="bi bi-check2 text-success me-1"></i> Live AJAX Cart & Fallback</li>
+                        <li><i class="bi bi-check2 text-success me-1"></i> Strict Stock Concurrency</li>
+                        <li><i class="bi bi-check2 text-success me-1"></i> CSRF & User Isolation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <hr class="my-4 border-secondary opacity-25">
+
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center small text-muted">
+                <span>&copy; {% now "Y" %} SwiftShop. All rights reserved.</span>
+                <span>Simulated payment environment (No real cards charged).</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <!-- Custom AJAX Cart JS -->
+    <script src="{% static 'js/cart.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

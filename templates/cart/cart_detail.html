@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Your Shopping Cart | SwiftShop{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col-12 col-md-8">
+        <h1 class="h2 fw-bold text-dark mb-1">Shopping Cart</h1>
+        <p class="text-muted mb-0">Review items before proceeding to checkout</p>
+    </div>
+    <div class="col-12 col-md-4 text-md-end mt-2 mt-md-0">
+        <a href="{% url 'store:product_list' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Continue Shopping
+        </a>
+    </div>
+</div>
+
+{% if items %}
+    <div class="row g-4" id="cart-content-wrapper">
+        <!-- Cart Items Table (Left Column) -->
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table align-middle cart-table mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col" style="min-width: 240px;">Product</th>
+                                <th scope="col" class="text-center" style="width: 160px;">Quantity</th>
+                                <th scope="col" class="text-end" style="width: 120px;">Subtotal</th>
+                                <th scope="col" class="text-center" style="width: 80px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-items-body">
+                            {% for item in items %}
+                                <tr id="cart-item-row-{{ item.id }}" class="cart-item-row" data-item-id="{{ item.id }}">
+                                    <!-- Product Info -->
+                                    <td>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <a href="{{ item.product.get_absolute_url }}">
+                                                {% if item.product.image %}
+                                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="cart-item-img">
+                                                {% else %}
+                                                    <img src="{% static 'images/placeholder.svg' %}" alt="{{ item.product.name }}" class="cart-item-img">
+                                                {% endif %}
+                                            </a>
+                                            <div>
+                                                <a href="{{ item.product.get_absolute_url }}" class="fw-semibold text-dark text-decoration-none">
+                                                    {{ item.product.name }}
+                                                </a>
+                                                <div class="small text-muted mt-1">
+                                                    Unit Price: ${{ item.product.price }}
+                                                </div>
+                                                {% if item.quantity > item.product.stock %}
+                                                    <div class="badge bg-danger-subtle text-danger small mt-1">
+                                                        Exceeds stock (only {{ item.product.stock }} left)
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Quantity Controls (AJAX enabled with Form Fallback) -->
+                                    <td class="text-center">
+                                        <form action="{% url 'cart:update_cart_item' item.id %}" method="post" class="cart-qty-form d-inline-block">
+                                            {% csrf_token %}
+                                            <div class="quantity-control">
+                                                <button type="submit" name="action" value="decrease" class="btn-qty-decrease-ajax" data-item-id="{{ item.id }}" aria-label="Decrease quantity">-</button>
+                                                <input type="number" id="qty-input-{{ item.id }}" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" readonly class="cart-qty-input" data-item-id="{{ item.id }}">
+                                                <button type="submit" name="action" value="increase" class="btn-qty-increase-ajax" data-item-id="{{ item.id }}" aria-label="Increase quantity" {% if item.quantity >= item.product.stock %}disabled{% endif %}>+</button>
+                                            </div>
+                                        </form>
+                                    </td>
+
+                                    <!-- Line Subtotal -->
+                                    <td class="text-end fw-bold">
+                                        $<span id="item-subtotal-{{ item.id }}">{{ item.get_cost }}</span>
+                                    </td>
+
+                                    <!-- Remove Button -->
+                                    <td class="text-center">
+                                        <form action="{% url 'cart:remove_cart_item' item.id %}" method="post" class="cart-remove-form d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm border-0 btn-remove-ajax" data-item-id="{{ item.id }}" title="Remove item">
+                                                <i class="bi bi-trash3 fs-5"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary (Right Column) -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="fw-bold text-dark mb-3">Order Summary</h5>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Total Items:</span>
+                    <span class="fw-semibold" id="cart-summary-items-count">{{ cart.get_total_items }}</span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Subtotal:</span>
+                    <span class="fw-semibold">$<span id="cart-summary-subtotal">{{ cart.get_total_price }}</span></span>
+                </div>
+
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="text-muted">Estimated Shipping:</span>
+                    <span class="text-success fw-semibold">Free</span>
+                </div>
+
+                <hr class="my-3">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <span class="h5 fw-bold mb-0">Total:</span>
+                    <span class="h4 fw-bold text-primary mb-0">$<span id="cart-summary-total">{{ cart.get_total_price }}</span></span>
+                </div>
+
+                <a href="{% url 'orders:checkout' %}" class="btn btn-primary btn-lg w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-shield-check"></i> Proceed to Checkout
+                </a>
+
+                <div class="text-center mt-3">
+                    <span class="small text-muted">
+                        <i class="bi bi-lock-fill me-1"></i> Safe & Secure Checkout Guarantee
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State (Hidden when items present, shown dynamically by JS if all items removed) -->
+    <div id="cart-empty-placeholder" class="empty-state my-5 d-none">
+        <i class="bi bi-cart-x empty-state-icon d-block"></i>
+        <h3 class="fw-bold">Your Cart is Empty</h3>
+        <p class="text-muted mb-4">Looks like you haven't added anything to your cart yet.</p>
+        <a href="{% url 'store:product_list' %}" class="btn btn-primary px-4 py-2">
+            <i class="bi bi-bag-plus me-1"></i> Start Shopping
+        </a>
+    </div>
+
+{% else %}
+    <!-- Server-rendered Empty State -->
+    <div class="empty-state my-5">
+        <i class="bi bi-cart-x empty-state-icon d-block"></i>
+        <h3 class="fw-bold">Your Cart is Empty</h3>
+        <p class="text-muted mb-4">Looks like you haven't added anything to your cart yet.</p>
+        <a href="{% url 'store:product_list' %}" class="btn btn-primary px-4 py-2">
+            <i class="bi bi-bag-plus me-1"></i> Start Shopping
+        </a>
+    </div>
+{% endif %}
+{% endblock %}

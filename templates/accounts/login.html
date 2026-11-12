@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Log In | SwiftShop{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-5">
+        <div class="card shadow-sm border-0 p-4">
+            <div class="text-center mb-4">
+                <i class="bi bi-shield-lock text-primary display-5"></i>
+                <h3 class="fw-bold mt-2">Welcome Back</h3>
+                <p class="text-muted small">Sign in to your account to manage cart & orders</p>
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger py-2">
+                    {% for error in form.non_field_errors %}
+                        <p class="mb-0 small">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                {% endif %}
+
+                <!-- Username -->
+                <div class="mb-3">
+                    <label for="{{ form.username.id_for_label }}" class="form-label fw-semibold">Username</label>
+                    {{ form.username }}
+                    {% for error in form.username.errors %}
+                        <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <!-- Password -->
+                <div class="mb-4">
+                    <label for="{{ form.password.id_for_label }}" class="form-label fw-semibold">Password</label>
+                    {{ form.password }}
+                    {% for error in form.password.errors %}
+                        <div class="text-danger small mt-1"><i class="bi bi-exclamation-circle me-1"></i>{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                </button>
+            </form>
+
+            <div class="text-center mt-4 pt-3 border-top">
+                <span class="text-muted small">Don't have an account yet?</span>
+                <a href="{% url 'accounts:register' %}" class="small fw-semibold text-decoration-none ms-1">Register now</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.id }} Confirmation | SwiftShop{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-9">
+        <!-- Top Banner -->
+        <div class="card border-0 shadow-sm p-4 text-center mb-4">
+            <div class="mb-3">
+                {% if order.is_paid %}
+                    <i class="bi bi-patch-check-fill text-success display-3"></i>
+                    <h2 class="fw-bold mt-2 text-dark">Order Confirmed & Paid!</h2>
+                    <p class="text-muted">Thank you, <strong>{{ order.full_name }}</strong>. Your order has been placed and payment confirmed.</p>
+                {% else %}
+                    <i class="bi bi-clock-history text-warning display-3"></i>
+                    <h2 class="fw-bold mt-2 text-dark">Order Placed - Awaiting Payment</h2>
+                    <p class="text-muted">Your order <strong>#{{ order.id }}</strong> is confirmed in our database. Complete payment using our simulated demo payment below.</p>
+                {% endif %}
+            </div>
+
+            <!-- Payment Simulation Box -->
+            <div class="p-3 rounded-3 {% if order.is_paid %}bg-success-subtle border border-success-subtle{% else %}bg-warning-subtle border border-warning-subtle{% endif %} mx-auto col-12 col-md-8">
+                <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3">
+                    <div class="text-start">
+                        <span class="small text-uppercase fw-bold text-muted d-block">Payment Status</span>
+                        <span class="badge {% if order.is_paid %}bg-success{% else %}bg-warning text-dark{% endif %} fs-6 px-3 py-1">
+                            {{ order.status }}
+                        </span>
+                        <span class="ms-2 fw-bold text-dark fs-5">${{ order.total }}</span>
+                    </div>
+
+                    {% if not order.is_paid %}
+                        <form action="{% url 'orders:simulate_payment' order.id %}" method="post" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success fw-bold px-4 py-2 d-flex align-items-center gap-2">
+                                <i class="bi bi-credit-card-2-front-fill"></i> Pay Now (Demo)
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="text-success fw-semibold small">
+                            <i class="bi bi-shield-fill-check me-1"></i> Demo Transaction Settled
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipt Card -->
+        <div class="card border-0 shadow-sm p-4 mb-4">
+            <div class="row g-4 mb-4">
+                <div class="col-12 col-sm-6 col-md-3">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Order Number</span>
+                    <strong class="fs-6 text-dark">#{{ order.id }}</strong>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Date Placed</span>
+                    <strong class="fs-6 text-dark">{{ order.created_at|date:"M d, Y, g:i a" }}</strong>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Recipient</span>
+                    <strong class="fs-6 text-dark">{{ order.full_name }}</strong>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Shipping To</span>
+                    <span class="small text-dark d-block">{{ order.address }}, {{ order.city }} {{ order.postal_code }}</span>
+                </div>
+            </div>
+
+            <h5 class="fw-bold mb-3">Purchased Items</h5>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Product</th>
+                            <th scope="col" class="text-center">Price</th>
+                            <th scope="col" class="text-center">Qty</th>
+                            <th scope="col" class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items.all %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold text-dark">{{ item.product_name }}</div>
+                                    {% if item.product %}
+                                        <small><a href="{{ item.product.get_absolute_url }}" class="text-muted text-decoration-none">View Product</a></small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">${{ item.price_at_purchase }}</td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end fw-bold">${{ item.get_cost }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="3" class="text-end border-0 pt-3">Subtotal:</th>
+                            <td class="text-end border-0 pt-3 fw-semibold">${{ order.total }}</td>
+                        </tr>
+                        <tr>
+                            <th colspan="3" class="text-end border-0">Delivery:</th>
+                            <td class="text-end border-0 text-success fw-semibold">Free</td>
+                        </tr>
+                        <tr>
+                            <th colspan="3" class="text-end border-0 fs-5">Order Total:</th>
+                            <td class="text-end border-0 fs-5 fw-bold text-primary">${{ order.total }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 justify-content-between mt-4 pt-3 border-top">
+                <a href="{% url 'orders:order_history' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-clock-history me-1"></i> View Order History
+                </a>
+                <a href="{% url 'store:product_list' %}" class="btn btn-primary">
+                    <i class="bi bi-arrow-right-circle me-1"></i> Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
